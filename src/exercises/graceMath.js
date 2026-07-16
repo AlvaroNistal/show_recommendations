@@ -17,12 +17,19 @@ export const graceCount = {
     const n = randInt(1, max)
     const emoji = sample(COUNTABLES)
     const values = numberChoices(n, 3, 1, Math.max(max, 3))
+    const choices = values.map((v) => ({ id: String(v), type: 'text', value: String(v) }))
+    const display = [{ type: 'emojis', value: Array(n).fill(emoji) }]
     return {
       prompt: { text: '¿Cuántos hay?', speech: '¿Cuántos hay? ¡Cuéntalos!', lang: ES },
-      display: [{ type: 'emojis', value: Array(n).fill(emoji) }],
-      choices: values.map((v) => ({ id: String(v), type: 'text', value: String(v) })),
+      display,
+      choices,
       answerId: String(n),
       hint: { speech: 'Ese no es el número correcto. Inténtalo otra vez.', lang: ES },
+      prediction: {
+        prompt: { text: '¿Cuántos crees que hay?', speech: '¡Mira! ¿Cuántos crees que hay?', lang: ES },
+        display,
+        choices,
+      },
     }
   },
 }

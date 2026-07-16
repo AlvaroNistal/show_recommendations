@@ -85,6 +85,16 @@ export const PRAISE_EN = ['Great job!', 'Amazing!', 'Well done!', 'Fantastic!', 
 export const ENCOURAGE_ES = ['¡Casi! Inténtalo otra vez.', 'Mmm, prueba otra vez. ¡Tú puedes!', '¡Otra vez! Seguro que lo consigues.']
 export const ENCOURAGE_EN = ['Almost! Try again.', 'Hmm, one more try. You can do it!', "Listen again, you've got this!"]
 
+// Surprise events: rare silly animations shown between exercises (~10% of correct answers).
+export const SURPRISE_EVENTS = [
+  { id: 'dino-run', emoji: '🦖', dir: 'ltr', text: '¡ROAAR!' },
+  { id: 'unicorn', emoji: '🦄', dir: 'ltr', text: '✨' },
+  { id: 'rocket', emoji: '🚀', dir: 'rtl', text: '🌟' },
+  { id: 'alien', emoji: '👽', dir: 'ltr', text: '¡Hola!' },
+  { id: 'rainbow', emoji: '🌈', dir: 'ltr', text: '' },
+  { id: 'meteor', emoji: '☄️', dir: 'rtl', text: '' },
+]
+
 // Star-economy collection: silly animal companions unlocked by cumulative stars.
 export const STICKERS = [
   { id: 'fox', emoji: '🦊', name: 'Zorrito', cost: 3 },
