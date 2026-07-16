@@ -27,7 +27,7 @@ export const leoAdd = {
       display,
       choices: numberChoices(answer, 3, 0, maxSum + 3).map((v) => ({ id: String(v), type: 'text', value: String(v) })),
       answerId: String(answer),
-      hint: { speech: `¡Casi! Empieza en ${a} y cuenta ${b} más con los dedos.`, lang: ES },
+      hint: { speech: 'Ese no es el número correcto. Inténtalo otra vez.', lang: ES },
     }
   },
 }
@@ -49,7 +49,7 @@ export const leoSubtract = {
       display: [{ type: 'text', value: `${a} − ${b} = ?` }],
       choices: numberChoices(answer, 3, 0, max).map((v) => ({ id: String(v), type: 'text', value: String(v) })),
       answerId: String(answer),
-      hint: { speech: `¡Casi! Empieza en ${a} y cuenta ${b} hacia atrás.`, lang: ES },
+      hint: { speech: 'Ese no es el número correcto. Inténtalo otra vez.', lang: ES },
     }
   },
 }
@@ -76,8 +76,8 @@ export const leoCompare = {
       answerId: String(answer),
       hint: {
         speech: wantBigger
-          ? '¡Casi! Mayor significa el más grande. ¿Cuál es más grande?'
-          : '¡Casi! Menor significa el más pequeño. ¿Cuál es más pequeño?',
+          ? 'Ese no es el número mayor. Inténtalo otra vez.'
+          : 'Ese no es el número menor. Inténtalo otra vez.',
         lang: ES,
       },
     }
@@ -115,7 +115,7 @@ export const leoSequence = {
         value: String(v),
       })),
       answerId: String(answer),
-      hint: { speech: '¡Casi! Di los números en voz alta y busca el que falta.', lang: ES },
+      hint: { speech: 'Ese no es el número correcto. Inténtalo otra vez.', lang: ES },
     }
   },
 }

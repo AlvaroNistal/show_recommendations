@@ -88,8 +88,7 @@ export default function Session({ profile, onDone }) {
       // Gentle hint + retry, never a fail state (PRD 4.4).
       setWrongIds((w) => [...w, choiceId])
       if (audioOn) {
-        const encourage = sample(isEnglish ? ENCOURAGE_EN : ENCOURAGE_ES)
-        speak(`${encourage} ${exercise.hint?.speech ?? exercise.prompt.speech}`, exercise.prompt.lang)
+        speak(exercise.hint?.speech ?? exercise.prompt.speech, exercise.prompt.lang)
       }
       if (!attemptWrong) {
         // Only the first miss of an exercise counts toward adaptivity.

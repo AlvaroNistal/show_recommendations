@@ -26,7 +26,7 @@ export const leoVocab = {
       display: [],
       choices: shuffle([target, ...others]).map((w) => ({ id: w.word, type: 'emoji', value: w.emoji })),
       answerId: target.word,
-      hint: { speech: `Almost! Where is the ${target.word}? Try again!`, lang: EN },
+      hint: { speech: `That's not the correct ${target.word}. Try again.`, lang: EN },
     }
   },
 }
@@ -53,7 +53,7 @@ export const leoWhatColor = {
       display: [{ type: 'emoji', value: target.emoji }],
       choices: shuffle([correctColor, ...others]).map((c) => ({ id: c.id, type: 'color', value: c.hex })),
       answerId: target.color,
-      hint: { speech: `Almost! Look at the ${target.name}. What color is it? Try again!`, lang: EN },
+      hint: { speech: `That's not the correct color. Try again.`, lang: EN },
     }
   },
 }
@@ -80,7 +80,7 @@ export const leoNumbersEn = {
       display: [],
       choices: shuffle([...set]).map((v) => ({ id: String(v), type: 'text', value: String(v) })),
       answerId: String(n),
-      hint: { speech: `Almost! Listen carefully: ${n}. Try again!`, lang: EN },
+      hint: { speech: `That's not the correct number. Try again.`, lang: EN },
     }
   },
 }

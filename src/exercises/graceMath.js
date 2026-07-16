@@ -22,7 +22,7 @@ export const graceCount = {
       display: [{ type: 'emojis', value: Array(n).fill(emoji) }],
       choices: values.map((v) => ({ id: String(v), type: 'text', value: String(v) })),
       answerId: String(n),
-      hint: { speech: '¡Casi! Toca cada uno con el dedo y cuenta: uno, dos, tres...', lang: ES },
+      hint: { speech: 'Ese no es el número correcto. Inténtalo otra vez.', lang: ES },
     }
   },
 }
@@ -53,7 +53,7 @@ export const graceMore = {
       display: [],
       choices: groups.map((g) => ({ id: g.id, type: 'emojiGroup', value: Array(g.count).fill(g.emoji) })),
       answerId: 'big',
-      hint: { speech: '¡Casi! Cuenta los dos grupos. ¿Cuál tiene más?', lang: ES },
+      hint: { speech: 'Ese no es el grupo con más. Inténtalo otra vez.', lang: ES },
     }
   },
 }
@@ -74,7 +74,7 @@ export const graceShapes = {
       display: [{ type: 'emoji', value: target }],
       choices: shuffle([target, ...others]).map((s) => ({ id: s, type: 'emoji', value: s })),
       answerId: target,
-      hint: { speech: '¡Casi! Mira bien la figura de arriba. ¿Cuál es igual?', lang: ES },
+      hint: { speech: 'Esa no es la figura correcta. Inténtalo otra vez.', lang: ES },
     }
   },
 }
@@ -109,7 +109,7 @@ export const gracePattern = {
       display: [{ type: 'sequence', items: [...visible, '❓'] }],
       choices: shuffle(choiceTokens).map((t) => ({ id: t, type: 'emoji', value: t })),
       answerId: answer,
-      hint: { speech: '¡Casi! Di el patrón en voz alta y verás qué viene después.', lang: ES },
+      hint: { speech: 'Ese no es el correcto. Inténtalo otra vez.', lang: ES },
     }
   },
 }
