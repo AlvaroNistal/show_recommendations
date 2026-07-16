@@ -63,7 +63,26 @@ function ChoiceContent({ choice }) {
   }
 }
 
+// What to say aloud when the child taps a choice.
+function choiceLabel(choice) {
+  switch (choice.type) {
+    case 'text':      return choice.value                    // "14", "7"
+    case 'emoji':     return choice.id                       // "dog", "cat"
+    case 'color':     return choice.id                       // "red", "blue"
+    case 'emojiGroup': return String(choice.value.length)    // count of objects shown
+    default:          return null
+  }
+}
+
 export default function Exercise({ exercise, audioOn, onAnswer, wrongIds, locked }) {
+  function handleChoiceTap(choice) {
+    if (audioOn) {
+      const label = choiceLabel(choice)
+      if (label) speak(label, exercise.prompt.lang)
+    }
+    onAnswer(choice.id)
+  }
+
   return (
     <div className="flex w-full flex-1 flex-col items-center justify-center gap-8 px-4">
       <div className="flex items-center gap-3">
@@ -88,7 +107,7 @@ export default function Exercise({ exercise, audioOn, onAnswer, wrongIds, locked
             <button
               key={choice.id}
               disabled={locked || isWrong}
-              onClick={() => onAnswer(choice.id)}
+              onClick={() => handleChoiceTap(choice)}
               className={`flex min-h-24 min-w-24 items-center justify-center rounded-3xl border-b-8 bg-white p-4 shadow-lg transition active:translate-y-1 active:border-b-4 ${
                 isWrong ? 'animate-wiggle border-slate-200 opacity-30' : 'border-violet-200 hover:bg-violet-50'
               }`}
