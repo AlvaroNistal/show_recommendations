@@ -10,9 +10,8 @@ import { PRAISE_ES, PRAISE_EN, SURPRISE_EVENTS, STICKERS } from '../content/voca
 
 const CELEBRATION_MS = 1600
 const STICKER_MS = 2600
-const MISSION_TARGET = 5 // fuel cells per mission
 
-// Shuffle template IDs ensuring the first ID differs from the last of the previous batch.
+// Shuffle template IDs ensuring the first differs from the last of the previous batch.
 function shuffleNoRepeat(ids, lastId) {
   let result = shuffle(ids)
   let tries = 0
@@ -20,7 +19,7 @@ function shuffleNoRepeat(ids, lastId) {
   return result
 }
 
-// What to say aloud when tapping a choice (also used in prediction phase).
+// What to say aloud when tapping a choice (shared with prediction phase).
 function choiceLabel(choice) {
   switch (choice.type) {
     case 'text':       return choice.value
@@ -57,20 +56,19 @@ export default function Session({ profile, onDone }) {
     return { template: t, ...t.generate(0) }
   })
 
-  // Prediction phase (for exercises with .prediction data)
+  // Prediction phase for exercises that include .prediction data.
   const [predPhase, setPredPhase] = useState(false)
 
   const [wrongIds, setWrongIds] = useState([])
   const [attemptWrong, setAttemptWrong] = useState(false)
-  const [celebration, setCelebration] = useState(null) // {text, emoji, subtext}
+  const [celebration, setCelebration] = useState(null)
   const [starsToday, setStarsToday] = useState(0)
   const [completedToday, setCompletedToday] = useState(0)
   const [newStickers, setNewStickers] = useState([])
-  const [missionDone, setMissionDone] = useState(false)
   const [surpriseEvent, setSurpriseEvent] = useState(null)
   const timerRef = useRef(null)
 
-  // Regenerate first exercise at warmed-up tier and check for prediction.
+  // Regenerate first exercise at warmed-up tier.
   useEffect(() => {
     const t = templates.find((tp) => tp.id === order[0]) ?? templates[0]
     const generated = t.generate(tierState[t.id].tier)
@@ -128,7 +126,6 @@ export default function Session({ profile, onDone }) {
     }, 400)
   }
 
-  // Shared post-correct logic for both regular answers and world completions.
   function handleCorrect(updatedTiers) {
     let unlocked = []
     const child = updateChild(profile.id, (c) => {
@@ -150,18 +147,12 @@ export default function Session({ profile, onDone }) {
     })
     void child
 
-    const newTotal = starsToday + 1
-    setStarsToday(newTotal)
+    setStarsToday((n) => n + 1)
     setCompletedToday((n) => n + 1)
     if (unlocked.length > 0) setNewStickers((prev) => [...prev, ...unlocked])
 
-    // Mission complete check
-    if (newTotal === MISSION_TARGET && !missionDone) {
-      setMissionDone(true)
-    }
-
-    // Surprise event (10% chance, not on sticker or mission complete)
-    if (!missionDone && unlocked.length === 0 && Math.random() < 0.1) {
+    // Surprise event (10% chance, skip on sticker unlocks)
+    if (unlocked.length === 0 && Math.random() < 0.1) {
       const evt = sample(SURPRISE_EVENTS)
       setSurpriseEvent(evt)
       setTimeout(() => setSurpriseEvent(null), 2000)
@@ -186,9 +177,7 @@ export default function Session({ profile, onDone }) {
 
     if (choiceId !== exercise.answerId) {
       setWrongIds((w) => [...w, choiceId])
-      if (audioOn) {
-        speak(exercise.hint?.speech ?? exercise.prompt.speech, exercise.prompt.lang)
-      }
+      if (audioOn) speak(exercise.hint?.speech ?? exercise.prompt.speech, exercise.prompt.lang)
       if (!attemptWrong) {
         setAttemptWrong(true)
         setTierState((prev) => {
@@ -208,7 +197,6 @@ export default function Session({ profile, onDone }) {
       return
     }
 
-    // Correct!
     const cleanSolve = !attemptWrong
     const updatedTiers = { ...tierState }
     const s = tierState[t.id]
@@ -225,7 +213,7 @@ export default function Session({ profile, onDone }) {
     handleCorrect(updatedTiers)
   }
 
-  // World exercises always count as clean solves (no wrong-answer state in worlds).
+  // World exercises always count as clean solves.
   function handleWorldComplete() {
     if (celebration) return
     const t = exercise.template
@@ -255,12 +243,32 @@ export default function Session({ profile, onDone }) {
     updateChild(profile.id, (c) => ({ ...c, audio: next }))
   }
 
-  // Prediction phase rendering
+  // Prediction phase
   if (predPhase && exercise.prediction) {
     const pred = exercise.prediction
     return (
       <div className={`flex min-h-dvh flex-col bg-gradient-to-b ${profile.theme.bg}`}>
-        <MissionHeader starsToday={starsToday} profile={profile} onAudio={toggleAudio} audioOn={audioOn} onDone={finishSession} />
+        <header className="flex items-center justify-between p-4">
+          <div className="flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 shadow">
+            <span className="text-2xl">{profile.avatar}</span>
+            <span className="text-xl font-black text-amber-500">⭐ {starsToday}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={toggleAudio}
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-white/80 text-xl shadow transition active:scale-90"
+            >
+              {audioOn ? '🔊' : '🔇'}
+            </button>
+            <button
+              onClick={finishSession}
+              className="rounded-full bg-white/80 px-5 py-3 text-lg font-bold text-slate-600 shadow transition active:scale-95"
+            >
+              ✅ He terminado
+            </button>
+          </div>
+        </header>
+
         <div className="flex w-full flex-1 flex-col items-center justify-center gap-8 px-4">
           <div className="flex items-center gap-3">
             <button
@@ -286,6 +294,7 @@ export default function Session({ profile, onDone }) {
             ))}
           </div>
         </div>
+
         <footer className="p-4 text-center text-sm font-semibold text-slate-400">
           {exercise.template.icon} {exercise.template.name} · ¿Cuál crees tú?
         </footer>
@@ -295,14 +304,35 @@ export default function Session({ profile, onDone }) {
 
   return (
     <div className={`flex min-h-dvh flex-col bg-gradient-to-b ${profile.theme.bg}`}>
-      <MissionHeader starsToday={starsToday} profile={profile} onAudio={toggleAudio} audioOn={audioOn} onDone={finishSession} />
+      <header className="flex items-center justify-between p-4">
+        <div className="flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 shadow">
+          <span className="text-2xl">{profile.avatar}</span>
+          <span className="text-xl font-black text-amber-500">⭐ {starsToday}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={toggleAudio}
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-white/80 text-xl shadow transition active:scale-90"
+            aria-label={audioOn ? 'Silenciar' : 'Activar sonido'}
+          >
+            {audioOn ? '🔊' : '🔇'}
+          </button>
+          <button
+            onClick={finishSession}
+            className="rounded-full bg-white/80 px-5 py-3 text-lg font-bold text-slate-600 shadow transition active:scale-95"
+          >
+            ✅ He terminado
+          </button>
+        </div>
+      </header>
 
       {exercise.worldType ? (
-        <MicroWorld
-          exercise={exercise}
-          audioOn={audioOn}
-          onComplete={handleWorldComplete}
-        />
+        <>
+          <div className="px-4 pt-2 text-center">
+            <h2 className="text-2xl font-black text-slate-700">{exercise.prompt.text}</h2>
+          </div>
+          <MicroWorld exercise={exercise} audioOn={audioOn} onComplete={handleWorldComplete} />
+        </>
       ) : (
         <Exercise
           exercise={exercise}
@@ -313,13 +343,6 @@ export default function Session({ profile, onDone }) {
         />
       )}
 
-      {/* World prompt header */}
-      {exercise.worldType && (
-        <div className="px-4 py-2 text-center">
-          <h2 className="text-2xl font-black text-slate-700">{exercise.prompt.text}</h2>
-        </div>
-      )}
-
       <footer className="p-4 text-center text-sm font-semibold text-slate-400">
         {exercise.template.icon} {exercise.template.name}
       </footer>
@@ -328,97 +351,20 @@ export default function Session({ profile, onDone }) {
         <CelebrationOverlay text={celebration.text} emoji={celebration.emoji} subtext={celebration.subtext} />
       )}
 
-      {missionDone && !celebration && (
-        <MissionComplete onDone={finishSession} />
-      )}
-
       <SurpriseEvent event={surpriseEvent} />
     </div>
   )
 }
 
-// ── Mission header ────────────────────────────────────────────────────────────
-
-function MissionHeader({ starsToday, profile, onAudio, audioOn, onDone }) {
+function PredDisplayItem({ item }) {
+  if (item.type !== 'emojis') return null
   return (
-    <header className="flex items-center justify-between p-4">
-      {/* Rocket mission progress */}
-      <div className="flex items-center gap-2 rounded-full bg-white/80 px-3 py-2 shadow">
-        <span className="text-xl">🚀</span>
-        <div className="flex gap-1">
-          {Array.from({ length: MISSION_TARGET }, (_, i) => (
-            <span
-              key={i}
-              className={`text-lg transition-transform ${i < starsToday ? 'animate-fuel-fill' : 'opacity-25'}`}
-            >
-              ⭐
-            </span>
-          ))}
-        </div>
-      </div>
-      <div className="flex items-center gap-2">
-        <button
-          onClick={onAudio}
-          className="flex h-12 w-12 items-center justify-center rounded-full bg-white/80 text-xl shadow transition active:scale-90"
-          aria-label={audioOn ? 'Silenciar' : 'Activar sonido'}
-        >
-          {audioOn ? '🔊' : '🔇'}
-        </button>
-        <button
-          onClick={onDone}
-          className="rounded-full bg-white/80 px-5 py-3 text-lg font-bold text-slate-600 shadow transition active:scale-95"
-        >
-          ✅ He terminado
-        </button>
-      </div>
-    </header>
-  )
-}
-
-// ── Mission complete overlay ──────────────────────────────────────────────────
-
-function MissionComplete({ onDone }) {
-  return (
-    <div className="fixed inset-0 z-30 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="animate-mission-drop flex flex-col items-center gap-4 rounded-3xl bg-white p-8 shadow-2xl">
-        <div className="text-7xl">🚀</div>
-        <h2 className="text-3xl font-black text-slate-700">¡Misión completa!</h2>
-        <p className="text-center text-slate-500">
-          ¡Has conseguido {MISSION_TARGET} células de combustible!
-        </p>
-        <div className="flex gap-1 text-3xl">
-          {Array.from({ length: MISSION_TARGET }, (_, i) => (
-            <span key={i} className="animate-bounce-soft" style={{ animationDelay: `${i * 0.1}s` }}>
-              ⭐
-            </span>
-          ))}
-        </div>
-        <button
-          onClick={onDone}
-          className="mt-2 rounded-full bg-violet-500 px-8 py-4 text-xl font-black text-white shadow-lg transition active:scale-95"
-        >
-          ¡Terminar!
-        </button>
-      </div>
+    <div className="flex max-w-md flex-wrap items-center justify-center gap-2 text-5xl">
+      {item.value.map((e, i) => (
+        <span key={i} className="animate-pop" style={{ animationDelay: `${i * 70}ms` }}>{e}</span>
+      ))}
     </div>
   )
-}
-
-// ── Helpers for prediction phase (same logic as Exercise.jsx) ─────────────────
-
-function PredDisplayItem({ item }) {
-  if (item.type === 'emojis') {
-    return (
-      <div className="flex max-w-md flex-wrap items-center justify-center gap-2 text-5xl">
-        {item.value.map((e, i) => (
-          <span key={i} className="animate-pop" style={{ animationDelay: `${i * 70}ms` }}>
-            {e}
-          </span>
-        ))}
-      </div>
-    )
-  }
-  return null
 }
 
 function PredChoiceContent({ choice }) {

@@ -7,10 +7,12 @@ export default function Balanza({ config, audioOn, onComplete }) {
 
   const leftTotal = leftItems.reduce((s, it) => s + it.value, 0)
   const rightTotal = config.rightItems.reduce((s, it) => s + it.value, 0)
-  const diff = leftTotal - rightTotal // negative = left lighter (right side dips)
+  const diff = leftTotal - rightTotal   // negative = left is lighter
   const balanced = diff === 0 && leftItems.length > 0
 
-  const tiltDeg = Math.max(-18, Math.min(18, diff * 4))
+  // Plates physically rise/fall: lighter side floats up, heavier sinks down
+  const leftY = Math.max(-28, Math.min(28, diff * 7))
+  const rightY = -leftY
 
   useEffect(() => {
     if (balanced && !justBalanced) {
@@ -21,7 +23,7 @@ export default function Balanza({ config, audioOn, onComplete }) {
   }, [balanced, justBalanced, audioOn, onComplete])
 
   function addItem(item) {
-    if (leftTotal + item.value > rightTotal + 5) return
+    if (leftTotal >= rightTotal + 6) return   // hard cap: don't let it go way over
     setLeftItems((prev) => [...prev, item])
     setJustBalanced(false)
   }
@@ -31,112 +33,90 @@ export default function Balanza({ config, audioOn, onComplete }) {
     setJustBalanced(false)
   }
 
-  const statusLabel = balanced
-    ? '⚖️ ¡Equilibrada!'
-    : diff < 0
-      ? '↗️ Falta peso'
-      : diff > 0
-        ? '↙️ Demasiado peso'
-        : ''
+  const statusEmoji = balanced ? '⚖️' : diff < 0 ? '⬆️' : '⬇️'
+  const statusText  = balanced ? '¡Equilibrada!' : diff < 0 ? 'Falta peso' : 'Demasiado'
 
   return (
-    <div className="flex w-full flex-1 flex-col items-center justify-center gap-4 px-4">
-      {/* Scale visual */}
-      <div className="relative flex h-48 w-full max-w-sm items-end justify-center">
-        {/* Stand post */}
-        <div className="absolute bottom-0 left-1/2 z-10 h-20 w-3 -translate-x-1/2 rounded-full bg-amber-700" />
+    <div className="flex w-full flex-1 flex-col items-center justify-center gap-6 px-4">
 
-        {/* Beam container — rotates around center */}
+      {/* The two plates */}
+      <div className="flex w-full max-w-sm items-end justify-center gap-6">
+
+        {/* Left plate — child adds here */}
         <div
-          className="balance-beam absolute flex w-72 items-end justify-between"
-          style={{ bottom: '4.5rem', transform: `rotateZ(${tiltDeg}deg)` }}
+          className="flex flex-col items-center gap-2 transition-transform duration-500"
+          style={{ transform: `translateY(${leftY}px)` }}
         >
-          {/* Left pan */}
           <div
-            className="flex flex-col items-center"
-            style={{ transform: `rotateZ(${-tiltDeg}deg)` }}
-          >
-            <div className="h-10 w-0.5 bg-amber-600" />
-            <div
-              className={`flex min-h-12 min-w-16 flex-wrap content-center justify-center gap-1 rounded-xl border-2 p-2 text-2xl transition-colors ${
-                balanced
-                  ? 'border-emerald-400 bg-emerald-50'
+            className={`flex min-h-28 w-36 flex-wrap content-center items-center justify-center gap-2 rounded-3xl border-4 p-3 text-4xl transition-colors duration-300 ${
+              balanced
+                ? 'border-emerald-400 bg-emerald-50'
+                : leftItems.length === 0
+                  ? 'border-dashed border-slate-300 bg-slate-50'
                   : 'border-amber-300 bg-amber-50'
-              }`}
-            >
-              {leftItems.map((it, i) => (
+            }`}
+          >
+            {leftItems.length === 0 ? (
+              <span className="text-3xl text-slate-300">+</span>
+            ) : (
+              leftItems.map((it, i) => (
                 <button
                   key={i}
                   onClick={() => removeItem(i)}
                   className="leading-none transition active:scale-75"
+                  aria-label="Quitar"
                 >
                   {it.emoji}
                 </button>
-              ))}
-              {leftItems.length === 0 && (
-                <span className="text-lg text-amber-300">?</span>
-              )}
-            </div>
+              ))
+            )}
           </div>
-
-          {/* Beam bar */}
-          <div className="h-2 flex-1 rounded-full bg-amber-700" />
-
-          {/* Right pan */}
-          <div
-            className="flex flex-col items-center"
-            style={{ transform: `rotateZ(${-tiltDeg}deg)` }}
-          >
-            <div className="h-10 w-0.5 bg-amber-600" />
-            <div className="flex min-h-12 min-w-16 flex-wrap content-center justify-center gap-1 rounded-xl border-2 border-amber-300 bg-amber-50 p-2 text-2xl">
-              {config.rightItems.map((it, i) => (
-                <span key={i} className="leading-none">
-                  {it.emoji}
-                </span>
-              ))}
-            </div>
-          </div>
+          <span className="text-3xl font-black text-slate-700">{leftTotal}</span>
+          <span className="text-sm font-semibold text-slate-400">Tu lado</span>
         </div>
-      </div>
 
-      {/* Weight totals */}
-      <div className="flex w-full max-w-xs items-center justify-between px-2 text-lg font-bold text-slate-600">
-        <span>{leftTotal > 0 ? `= ${leftTotal}` : ''}</span>
-        <span
-          className={`text-center text-base font-black transition-colors ${balanced ? 'text-emerald-600' : 'text-slate-400'}`}
+        {/* Central status */}
+        <div className="flex flex-col items-center gap-1 pb-10">
+          <span className="text-4xl">{statusEmoji}</span>
+          <span className={`text-xs font-bold ${balanced ? 'text-emerald-600' : 'text-slate-400'}`}>
+            {statusText}
+          </span>
+        </div>
+
+        {/* Right plate — fixed target */}
+        <div
+          className="flex flex-col items-center gap-2 transition-transform duration-500"
+          style={{ transform: `translateY(${rightY}px)` }}
         >
-          {statusLabel}
-        </span>
-        <span>= {rightTotal}</span>
+          <div className="flex min-h-28 w-36 flex-wrap content-center items-center justify-center gap-2 rounded-3xl border-4 border-slate-300 bg-white p-3 text-4xl shadow">
+            {config.rightItems.map((it, i) => (
+              <span key={i} className="leading-none">{it.emoji}</span>
+            ))}
+          </div>
+          <span className="text-3xl font-black text-slate-700">{rightTotal}</span>
+          <span className="text-sm font-semibold text-slate-400">Objetivo</span>
+        </div>
       </div>
 
-      {/* Weight legend for mixed weights */}
-      {config.palette.length > 1 && (
-        <div className="flex gap-4 text-sm text-slate-500">
-          {config.palette.map((w) => (
-            <span key={w.emoji}>
-              {w.emoji} = {w.value}
-            </span>
-          ))}
-        </div>
-      )}
-
-      {/* Palette — tap to add to left pan */}
-      <div className="flex gap-4">
+      {/* Weight palette */}
+      <div className="flex flex-wrap justify-center gap-4">
         {config.palette.map((item) => (
           <button
             key={item.emoji}
             onClick={() => addItem(item)}
             disabled={justBalanced}
-            className="flex min-h-20 min-w-20 flex-col items-center justify-center gap-1 rounded-3xl border-b-8 border-violet-200 bg-white p-4 text-5xl shadow-lg transition active:translate-y-1 active:border-b-4 disabled:opacity-40"
+            className="flex min-h-20 min-w-20 flex-col items-center justify-center gap-1 rounded-3xl border-b-8 border-violet-200 bg-white px-4 py-3 shadow-lg transition active:translate-y-1 active:border-b-4 disabled:opacity-40"
           >
-            {item.emoji}
+            <span className="text-4xl leading-none">{item.emoji}</span>
+            {config.palette.length > 1 && (
+              <span className="text-lg font-black text-slate-500">= {item.value}</span>
+            )}
           </button>
         ))}
       </div>
 
       <p className="text-sm text-slate-400">
-        Toca una pesa para añadirla · Toca el pan para quitarla
+        Toca una pesa para añadir · Toca tu lado para quitar
       </p>
     </div>
   )
