@@ -1,0 +1,12 @@
+{
+  "name": "Aprende Conmigo",
+  "short_name": "Aprende",
+  "description": "Juego bilingüe de mates e inglés para Leo y Grace",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#faf5ff",
+  "theme_color": "#7c3aed",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
